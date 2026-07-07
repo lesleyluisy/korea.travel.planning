@@ -479,7 +479,9 @@
 
     <!-- ==================== JavaScript 邏輯控制 ==================== -->
     <script>
-        const BIN_URL = "https://api.keyvalue.xyz/6e5f32b8/koreaTravelData";
+        const BIN_ID = '668b8e23e41b4d34e40e28f3';
+        const MASTER_KEY = '$2a$10$qj76UJlS0B98LuSmrN9ObuxgEEUXULYRlhgRwHX.XohlNdQVblhXS'; 
+        const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
         // 共用與初使化設定數據
         const defaultChecklist = [
@@ -930,70 +932,85 @@
             container.innerHTML = settlementList.join('');
         }
 
-        // --- 全域資料同步核心 ---
-        async function syncAllCloudData() {
-            const icon = document.getElementById('sync-icon'); const status = document.getElementById('sync-status');
-            if (icon) icon.classList.add('syncing'); if (status) status.innerText = "正在同步雲端...";
-
-            // 本地讀取快取
-            localMemos = JSON.parse(localStorage.getItem('koreaLocalMemos')) || [];
-            favorites = JSON.parse(localStorage.getItem('koreaTravelFavorites')) || [];
-            const chkData = localStorage.getItem('koreaTravelChecklist_v3');
-            checklist = chkData ? JSON.parse(chkData) : JSON.parse(JSON.stringify(defaultChecklist));
-
-            try {
-                const response = await fetch(BIN_URL);
-                if (response.ok) {
-                    const cloudData = await response.json();
-                    if (cloudData) {
-                        itineraries = cloudData.itineraries || [];
-                        hotels = cloudData.hotels || [];
-                        cloudMemos = cloudData.cloudMemos || [];
-                        expenses = cloudData.expenses || [];
-                        
-                        localStorage.setItem('koreaItineraries', JSON.stringify(itineraries));
-                        localStorage.setItem('koreaTravelHotels', JSON.stringify(hotels));
-                        localStorage.setItem('koreaCloudMemos', JSON.stringify(cloudMemos));
-                        localStorage.setItem('koreaTravelExpenses', JSON.stringify(expenses));
-                    }
-                }
-            } catch (error) {
-                console.log("網路連線失敗，啟用本地快取模式");
-                itineraries = JSON.parse(localStorage.getItem('koreaItineraries')) || [];
-                hotels = JSON.parse(localStorage.getItem('koreaTravelHotels')) || [];
-                cloudMemos = JSON.parse(localStorage.getItem('koreaCloudMemos')) || [];
-                expenses = JSON.parse(localStorage.getItem('koreaTravelExpenses')) || [];
-            } finally {
-                renderItineraries();
-                renderHotels();
-                renderMemos();
-                renderFavorites();
-                renderChecklist();
-                renderExpenses();
-                if (icon) icon.classList.remove('syncing');
-                if (status) status.innerText = "資料已與雲端同步";
+        // --- 全域資料同步核心 (JSONBin 穩定版) ---
+async function syncAllCloudData() {
+    const icon = document.getElementById('sync-icon');
+    const status = document.getElementById('sync-status');
+    if (icon) icon.classList.add('syncing');
+    if (status) status.innerText = "正在同步雲端...";
+    
+    // 本地讀取快取
+    localMemos = JSON.parse(localStorage.getItem('koreaLocalMemos')) || [];
+    favorites = JSON.parse(localStorage.getItem('koreaTravelFavorites')) || [];
+    const chkData = localStorage.getItem('koreaTravelChecklist_v3');
+    checklist = chkData ? JSON.parse(chkData) : JSON.parse(JSON.stringify(defaultChecklist));
+    
+    try {
+        const response = await fetch(BIN_URL, {
+            method: 'GET',
+            headers: { 'X-Master-Key': MASTER_KEY }
+        });
+        if (response.ok) {
+            const resData = await response.json();
+            const cloudData = resData.record;
+            if (cloudData) {
+                itineraries = cloudData.itineraries || [];
+                hotels = cloudData.hotels || [];
+                cloudMemos = cloudData.cloudMemos || [];
+                expenses = cloudData.expenses || [];
+                
+                localStorage.setItem('koreaItineraries', JSON.stringify(itineraries));
+                localStorage.setItem('koreaTravelHotels', JSON.stringify(hotels));
+                localStorage.setItem('koreaCloudMemos', JSON.stringify(cloudMemos));
+                localStorage.setItem('koreaTravelExpenses', JSON.stringify(expenses));
             }
+            if (status) status.innerText = "資料與雲端同步";
         }
+    } catch (error) {
+        console.log("網路連線失敗，啟用本地快取模式");
+        if (status) status.innerText = "僅存於本地(網路連線失敗)";
+        itineraries = JSON.parse(localStorage.getItem('koreaItineraries')) || [];
+        hotels = JSON.parse(localStorage.getItem('koreaTravelHotels')) || [];
+        cloudMemos = JSON.parse(localStorage.getItem('koreaCloudMemos')) || [];
+        expenses = JSON.parse(localStorage.getItem('koreaTravelExpenses')) || [];
+    } finally {
+        // 這邊會觸發妳原本網頁的畫面渲染功能
+        if(typeof renderItineraries === 'function') renderItineraries();
+        if(typeof renderHotels === 'function') renderHotels();
+        if(typeof renderMemos === 'function') renderMemos();
+        if(typeof renderExpenses === 'function') renderExpenses();
+        if(icon) icon.classList.remove('syncing');
+    }
+}
 
-        async function updateCloudData() {
-            const icon = document.getElementById('sync-icon'); const status = document.getElementById('sync-status');
-            if (icon) icon.classList.add('syncing'); if (status) status.innerText = "雲端更新中...";
+async function updateCloudData() {
+    const icon = document.getElementById('sync-icon');
+    const status = document.getElementById('sync-status');
+    if (icon) icon.classList.add('syncing');
+    if (status) status.innerText = "雲端更新中...";
 
-            localStorage.setItem('koreaItineraries', JSON.stringify(itineraries));
-            localStorage.setItem('koreaTravelHotels', JSON.stringify(hotels));
-            localStorage.setItem('koreaCloudMemos', JSON.stringify(cloudMemos));
-            localStorage.setItem('koreaTravelExpenses', JSON.stringify(expenses));
-
-            try {
-                await fetch(BIN_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ itineraries, hotels, cloudMemos, expenses }) 
-                });
-                if (status) status.innerText = "已與雲端同步";
-            } catch (error) {
-                if (status) status.innerText = "僅存於本地(網路連線失敗)";
-            } finally { if (icon) icon.classList.remove('syncing'); }
-        }
+    localStorage.setItem('koreaItineraries', JSON.stringify(itineraries));
+    localStorage.setItem('koreaTravelHotels', JSON.stringify(hotels));
+    localStorage.setItem('koreaCloudMemos', JSON.stringify(cloudMemos));
+    localStorage.setItem('koreaTravelExpenses', JSON.stringify(expenses));
+    
+    try {
+        await fetch(BIN_URL, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': MASTER_KEY
+            },
+            body: JSON.stringify({ itineraries, hotels, cloudMemos, expenses })
+        });
+        if (status) status.innerText = "已與雲端同步";
+    } catch (e) {
+        console.error("上傳雲端失敗", e);
+        if (status) status.innerText = "僅存於本地(網路連線失敗)";
+    } finally {
+        if (icon) icon.classList.remove('syncing');
+    }
+}
 
         // 頁面初始化
         fetchLiveExchangeRate();
