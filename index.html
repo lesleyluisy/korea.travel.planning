@@ -667,12 +667,32 @@
             const linkify = (text) => {
                 return text.split(/(\s+)/).map(part => {
                     if (part.startsWith('http://') || part.startsWith('https://')) {
-                        // 加上 onclick="event.stopPropagation()" 防止點擊網址時觸發彈窗
                         return '<a href="' + part + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="text-blue-500 hover:underline break-all font-semibold">' + part + '</a>';
                     }
                     return part;
                 }).join('');
             };
+
+            allMemos.forEach(memo => {
+                const isSync = memo.isSync;
+                const cardHtml = `
+                    <div onclick="editMemo('${memo.id}', ${isSync})" class="bg-white p-4 rounded-xl border border-yellow-200 card-shadow space-y-2 relative cursor-pointer hover:bg-yellow-50/30 transition-all">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-blue-500 flex items-center gap-1">
+                                ${isSync ? '<i class="fa-solid fa-earth-americas"></i> 雲端同步' : '<i class="fa-solid fa-mobile-screen-button"></i> 本地儲存'}
+                            </span>
+                            <button onclick="event.stopPropagation(); deleteMemoData('${memo.id}', ${isSync})" class="text-gray-400 hover:text-red-500 transition-colors">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                        <div class="text-xs text-gray-700 font-medium whitespace-pre-line leading-relaxed">
+                            ${linkify(memo.content)}
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', cardHtml);
+            });
+        }
 
             // 組合卡片並渲染到畫面上
             allMemos.forEach(memo => {
