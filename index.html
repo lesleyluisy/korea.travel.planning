@@ -667,7 +667,7 @@
                 card.innerHTML = `
                     <div class="flex justify-between items-start gap-1">
                         <span class="font-bold text-[10px] text-gray-400 shrink-0 select-none">${memo.isSync ? '🌐' : '🔒'}</span>
-                        <p class="text-gray-700 font-medium flex-1 line-clamp-2 leading-relaxed break-all">${memo.content}</p>
+                        <p class="text-gray-700 font-medium flex-1 leading-relaxed break-all whitespace-pre-line">${memo.content}</p>
                         <button class="del-btn text-gray-300 hover:text-red-500 transition-colors px-1 shrink-0"><i class="fa-solid fa-trash-can text-[10px]"></i></button>
                     </div>`;
                 card.querySelector('.del-btn').onclick = () => deleteMemo(memo.id, memo.isSync);
