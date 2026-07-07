@@ -437,7 +437,7 @@
                         <option value="購物">購物 🛍️</option>
                         <option value="交通">交通 🚗</option>
                         <option value="景點">景點 🌲</option>
-                        <option value="住宿">住宿 🏨</option>
+                        <option value="體驗">體驗 🏨</option>
                         <option value="其他">其他 📝</option>
                     </select>
                 </div>
@@ -493,11 +493,11 @@
         ];
 
         const categoryStyles = {
-            "景点": { bg: "bg-green-50", text: "text-green-700", border: "border-green-500", icon: "fa-tree" },
-            "餐饮": { bg: "bg-orange-50", text: "text-orange-700", border: "border-orange-500", icon: "fa-utensils" },
+            "景點": { bg: "bg-green-50", text: "text-green-700", border: "border-green-500", icon: "fa-tree" },
+            "餐飲": { bg: "bg-orange-50", text: "text-orange-700", border: "border-orange-500", icon: "fa-utensils" },
             "交通": { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-500", icon: "fa-car" },
             "住宿": { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-500", icon: "fa-hotel" },
-            "购物": { bg: "bg-pink-50", text: "text-pink-700", border: "border-pink-500", icon: "fa-bag-shopping" }
+            "購物": { bg: "bg-pink-50", text: "text-pink-700", border: "border-pink-500", icon: "fa-bag-shopping" }
         };
 
         const expenseBadgeStyles = { "住宿": "bg-purple-100 text-purple-800", "交通": "bg-blue-100 text-blue-800", "餐飲": "bg-orange-100 text-orange-800", "購物": "bg-pink-100 text-pink-800", "景點": "bg-green-100 text-green-800", "其他": "bg-gray-100 text-gray-800" };
@@ -541,8 +541,8 @@
                 return;
             }
             itineraries.forEach((item, index) => {
-                const cat = item.category || "景点";
-                const style = categoryStyles[cat] || categoryStyles["景点"];
+                const cat = item.category || "景點";
+                const style = categoryStyles[cat] || categoryStyles["景點"];
                 const card = document.createElement('div');
                 card.className = `bg-white rounded-xl p-4 card-shadow border-l-4 ${style.border} flex items-start gap-3 relative transition-all`;
                 card.setAttribute('data-index', index);
@@ -581,7 +581,7 @@
             document.getElementById('modal-title').innerText = "修改行程項目";
             document.getElementById('form-edit-index').value = index;
             document.getElementById('form-date').value = item.date;
-            document.getElementById('form-category').value = item.category || "景点";
+            document.getElementById('form-category').value = item.category || "景點";
             document.getElementById('form-time-start').value = item.timeStart;
             document.getElementById('form-time-end').value = item.timeEnd;
             document.getElementById('form-title').value = item.title;
@@ -648,21 +648,54 @@
         function openMemoModal() { document.getElementById('memo-modal-title').innerText = "新增備忘錄"; document.getElementById('memo-edit-id').value = ""; document.getElementById('form-memo-content').value = ""; document.getElementById('form-memo-issync').checked = false; document.getElementById('memo-modal').classList.remove('hidden'); }
         function closeMemoModal() { document.getElementById('memo-modal').classList.add('hidden'); }
 
+        // 新增一個「開啟編輯」的函式
+        function openEditMemoModal(id, content, isSync) {
+            document.getElementById('memo-modal-title').innerText = "修改備忘錄";
+            document.getElementById('memo-edit-id').value = id;
+            document.getElementById('form-memo-content').value = content;
+            document.getElementById('form-memo-issync').checked = isSync;
+            document.getElementById('memo-modal').classList.remove('hidden');
+        }
+
         function renderMemos() {
-    const container = document.getElementById('memo-list-container');
-    if(!container) return;
-    container.innerHTML = '';
-    const allMemos = [...cloudMemos.map(m => ({ ...m, isSync: true })), ...localMemos.map(m => ({ ...m, isSync: false }))];
-    if (allMemos.length === 0) { container.innerHTML = '<p class="text-gray-400 text-center py-6">目前沒有備忘紀錄</p>'; return; }
-    
-    const linkify = (text) => {
-        return text.split(/(\s+)/).map(part => {
-            if (part.startsWith('http://') || part.startsWith('https://')) {
-                return '<a href="' + part + '" target="_blank" rel="noopener" class="text-blue-500 hover:underline break-all font-semibold">' + part + '</a>';
-            }
-            return part;
-        }).join('');
-    };
+            const container = document.getElementById('memo-list-container');
+            if(!container) return;
+            container.innerHTML = '';
+            const allMemos = [...cloudMemos.map(m => ({ ...m, isSync: true })), ...localMemos.map(m => ({ ...m, isSync: false }))];
+            if (allMemos.length === 0) { container.innerHTML = '<p class="text-gray-400 text-center py-6">目前沒有備忘紀錄</p>'; return; }
+            
+            const linkify = (text) => {
+                return text.split(/(\s+)/).map(part => {
+                    if (part.startsWith('http://') || part.startsWith('https://')) {
+                        // 加上 onclick="event.stopPropagation()" 防止點擊網址時觸發彈窗
+                        return '<a href="' + part + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="text-blue-500 hover:underline break-all font-semibold">' + part + '</a>';
+                    }
+                    return part;
+                }).join('');
+            };
+
+            // 組合卡片並渲染到畫面上
+            allMemos.forEach(memo => {
+                const isSync = memo.isSync;
+
+                const cardHtml = `
+                    <div onclick="editMemo('${memo.id}', ${isSync})" class="bg-white p-4 rounded-xl border border-yellow-200 card-shadow space-y-2 relative cursor-pointer hover:bg-yellow-50/30 transition-all">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-blue-500 flex items-center gap-1">
+                                ${isSync ? '<i class="fa-solid fa-earth-americas"></i>' : '<i class="fa-solid fa-mobile-screen-button"></i>'}
+                            </span>
+                            <button onclick="event.stopPropagation(); deleteMemoData('${memo.id}', ${isSync})" class="text-gray-400 hover:text-red-500 transition-colors">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                        <div class="text-xs text-gray-700 font-medium whitespace-pre-line leading-relaxed">
+                            ${linkify(memo.content)}
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', cardHtml);
+            });
+        }
 
     allMemos.forEach(memo => {
         const card = document.createElement('div');
