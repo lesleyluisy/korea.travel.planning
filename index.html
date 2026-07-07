@@ -71,34 +71,33 @@
     <main id="view-tools" class="tab-content active p-4 space-y-4">
         <h2 class="font-bold text-lg mb-2">韓國行實用資訊</h2>
         
-        <!-- 備忘錄與喜愛清單 -->
-        <div class="flex flex-col gap-4 mb-4">
-            <!-- 備忘錄區塊 -->
-            <div class="bg-white rounded-xl p-3 card-shadow border-l-4 border-yellow-500 flex flex-col min-w-0">
-                <div class="flex justify-between items-center mb-2 shrink-0">
-                    <h3 class="font-bold text-xs flex items-center text-gray-900 truncate">
-                        <i class="fa-solid fa-pen-to-square text-yellow-500 mr-1.5 shrink-0"></i>重要備忘錄
+       <div class="w-full flex flex-col gap-4">
+            
+            <div class="bg-white rounded-xl p-3 card-shadow border-l-4 border-yellow-500 w-full">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-xs flex items-center text-gray-900">
+                        <i class="fa-solid fa-plane-departure text-yellow-500 mr-1.5"></i>重要備忘錄
                     </h3>
-                    <button onclick="openMemoModal()" class="text-[10px] bg-yellow-50 text-yellow-700 hover:bg-yellow-100 px-1.5 py-0.5 rounded font-bold transition-colors shrink-0">
-                        <i class="fa-solid fa-plus mr-0.5"></i>新增
+                    <button onclick="openMemoModal()" class="text-[10px] bg-yellow-50 text-yellow-700 hover:bg-yellow-100 px-2 py-0.5 rounded-md font-bold flex items-center gap-0.5">
+                        <i class="fa-solid fa-plus"></i> 新增
                     </button>
                 </div>
-                <div id="memo-list-container" class="space-y-1.5 max-h-[150px] overflow-y-auto flex-1 text-[11px] pr-0.5"></div>
+                <div id="memo-list-container" class="space-y-2 max-h-[250px] overflow-y-auto w-full"></div>
             </div>
 
-            <!-- 喜愛清單區塊 -->
-            <div class="bg-white rounded-xl p-3 card-shadow border-l-4 border-pink-500 flex flex-col min-w-0">
-                <h3 class="font-bold text-xs mb-2 flex items-center text-gray-900 truncate shrink-0">
-                    <i class="fa-solid fa-heart text-pink-500 mr-1.5 shrink-0"></i>喜愛清單
+            <div class="bg-white rounded-xl p-3 card-shadow border-l-4 border-pink-500 w-full">
+                <h3 class="font-bold text-xs flex items-center text-gray-900 mb-2">
+                    <i class="fa-solid fa-heart text-pink-500 mr-1.5"></i>喜愛清單
                 </h3>
-                <div class="flex gap-1 mb-2 shrink-0">
-                    <input type="text" id="fav-item-input" placeholder="店名或彩妝..." class="text-[11px] border p-1.5 rounded-lg flex-1 bg-white outline-none focus:border-pink-400 min-w-0">
-                    <button onclick="addFavItem()" class="bg-pink-500 text-white px-2.5 rounded-lg text-xs font-bold shadow hover:bg-pink-600 active:scale-95 transition-transform shrink-0">新增</button>
+                <div class="flex gap-1 mb-2">
+                    <input type="text" id="fav-item-input" placeholder="店名或彩妝..." class="text-[11px] border p-1.5 rounded-md flex-1 min-w-0 bg-gray-50 focus:bg-white focus:outline-none focus:border-pink-300">
+                    <button onclick="addFavItem()" class="bg-pink-500 text-white px-2.5 rounded-md text-[11px] font-bold active:scale-95 transition-transform shrink-0">新增</button>
                 </div>
-                <div id="fav-list-container" class="space-y-1 max-h-[115px] overflow-y-auto flex-1 text-[11px]"></div>
+                <div id="fav-list-container" class="space-y-1 max-h-[150px] overflow-y-auto w-full"></div>
             </div>
-        </div>
 
+        </div>
+        
         <div class="grid grid-cols-2 gap-3 mb-4 text-xs">
         <!-- 去程航班 -->
         <div class="bg-white p-3 rounded-xl border border-blue-200 card-shadow">
@@ -658,36 +657,40 @@
 
         function renderMemos() {
     const container = document.getElementById('memo-list-container');
-    if(!container) return; container.innerHTML = '';
+    if(!container) return;
+    container.innerHTML = '';
     const allMemos = [...cloudMemos.map(m => ({ ...m, isSync: true })), ...localMemos.map(m => ({ ...m, isSync: false }))];
     if (allMemos.length === 0) { container.innerHTML = '<p class="text-gray-400 text-center py-6">目前沒有備忘紀錄</p>'; return; }
     
-    // 網址偵測轉換器
+    // 安全版網址偵測：直接用簡單的字串分割，百分之百不破壞 HTML 結構
     const linkify = (text) => {
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-        return text.replace(urlRegex, (url) => {
-            return `<a href="${url}" target="_blank" class="text-blue-500 hover:underline break-all inline-block">${url}</a>`;
-        });
+        return text.split(/(\s+)/).map(part => {
+            if (part.startsWith('http://') || part.startsWith('https://')) {
+                return '<a href="' + part + '" target="_blank" rel="noopener" class="text-blue-500 hover:underline break-all font-semibold">' + part + '</a>';
+            }
+            return part;
+        }).join('');
     };
 
     allMemos.forEach(memo => {
         const card = document.createElement('div');
         const borderClass = memo.isSync ? 'border-amber-400 bg-amber-50/20' : 'border-gray-200 bg-gray-50/40';
-        card.className = `p-2 rounded-lg border ${borderClass} card-shadow relative group cursor-pointer hover:bg-gray-50 transition-colors`;
-        
-        // 讓點擊刪除或點擊超連結時，不會觸發卡片的編輯視窗
-        card.onclick = (e) => { 
-            if (e.target.closest('.del-btn') || e.target.tagName === 'A') return; 
-            editMemo(memo.id, memo.isSync); 
-        };
+        card.className = 'p-3 rounded-lg border ' + borderClass + ' card-shadow mb-2 block relative';
         
         card.innerHTML = `
-            <div class="flex justify-between items-start gap-1">
-                <span class="font-bold text-[10px] text-gray-400 shrink-0 select-none">${memo.isSync ? '🌐' : '🔒'}</span>
-                <p class="text-gray-700 font-medium flex-1 leading-relaxed break-all whitespace-pre-line relative z-10">${linkify(memo.content)}</p>
+            <div class="flex justify-between items-start gap-2 w-full">
+                <span class="font-bold text-[10px] text-gray-400 shrink-0 mt-0.5 select-none">${memo.isSync ? '🌐' : '🔒'}</span>
+                <div class="text-gray-700 font-medium flex-1 leading-relaxed break-all whitespace-pre-line text-xs">
+                    ${linkify(memo.content)}
+                </div>
                 <button class="del-btn text-gray-300 hover:text-red-500 transition-colors px-1 shrink-0"><i class="fa-solid fa-trash-can text-[10px]"></i></button>
             </div>
         `;
+
+        card.onclick = (e) => {
+            if (e.target.closest('.del-btn') || e.target.tagName === 'A') return;
+            editMemo(memo.id, memo.isSync);
+        };
         card.querySelector('.del-btn').onclick = () => deleteMemo(memo.id, memo.isSync);
         container.appendChild(card);
     });
