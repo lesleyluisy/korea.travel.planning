@@ -666,7 +666,7 @@
     const linkify = (text) => {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         return text.replace(urlRegex, (url) => {
-            return `<a href="${url}" target="_blank" class="text-blue-500 hover:underline break-all relative z-10">${url}</a>`;
+            return `<a href="${url}" target="_blank" class="text-blue-500 hover:underline break-all inline-block">${url}</a>`;
         });
     };
 
@@ -684,7 +684,7 @@
         card.innerHTML = `
             <div class="flex justify-between items-start gap-1">
                 <span class="font-bold text-[10px] text-gray-400 shrink-0 select-none">${memo.isSync ? '🌐' : '🔒'}</span>
-                <p class="text-gray-700 font-medium flex-1 leading-relaxed break-all whitespace-pre-line">${linkify(memo.content)}</p>
+                <p class="text-gray-700 font-medium flex-1 leading-relaxed break-all whitespace-pre-line relative z-10">${linkify(memo.content)}</p>
                 <button class="del-btn text-gray-300 hover:text-red-500 transition-colors px-1 shrink-0"><i class="fa-solid fa-trash-can text-[10px]"></i></button>
             </div>
         `;
