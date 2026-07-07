@@ -35,7 +35,7 @@
 <body class="text-gray-800 font-sans">
 
     <!-- 統一頂部標頭與天氣組件 -->
-    <header class="fixed top-0 left-0 right-0 bg-white p-4 shadow-md z-50">
+    <header class="fixed top-0 left-0 right-0 bg-white p-4 shadow-md z-50 flex justify-between items-center max-w-[1200px] mx-auto">
         <div>
             <h1 class="text-xl font-bold text-gray-900">3個女仔遊韓國👯‍♀️</h1>
             <p class="text-xs text-gray-500 flex items-center gap-1">
@@ -47,11 +47,11 @@
         </div>
         <!-- 最新天氣預報組件（點擊跳轉韓國氣象廳） -->
         <a href="https://www.weather.go.kr/w/index.do" target="_blank" rel="noopener" title="點擊查看韓國氣象廳最新天氣預報" 
-           class="text-right flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-50 active:scale-95 transition-all cursor-pointer border border-transparent hover:border-gray-100">
+           class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-50 active:scale-95 transition-all cursor-pointer border border-transparent hover:border-gray-100">
             <i class="fa-solid fa-cloud-sun text-yellow-500 text-2xl"></i>
-            <div>
-                <div class="font-bold text-lg text-gray-950">28°C</div>
-                <div class="text-[10px] text-gray-500 font-medium">降雨率 20% <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-gray-400"></i></div>
+            <div class="text-left">
+                <div class="font-bold text-lg text-gray-950 leading-tight">28°C</div>
+                <div class="text-[10px] text-gray-500 font-medium whitespace-nowrap">降雨率 20% <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-gray-400"></i></div>
             </div>
         </a>
     </header>
