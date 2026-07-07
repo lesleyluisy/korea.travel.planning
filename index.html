@@ -681,9 +681,9 @@
                     <div onclick="editMemo('${memo.id}', ${isSync})" class="bg-white p-4 rounded-xl border border-yellow-200 card-shadow space-y-2 relative cursor-pointer hover:bg-yellow-50/30 transition-all">
                         <div class="flex justify-between items-center">
                             <span class="text-xs text-blue-500 flex items-center gap-1">
-                                ${isSync ? '<i class="fa-solid fa-earth-americas"></i>' : '<i class="fa-solid fa-mobile-screen-button"></i>'}
+                                ${isSync ? '<i class="fa-solid fa-earth-americas"></i> 雲端同步' : '<i class="fa-solid fa-mobile-screen-button"></i> 本地儲存'}
                             </span>
-                            <button onclick="event.stopPropagation(); deleteMemoData('${memo.id}', ${isSync})" class="text-gray-400 hover:text-red-500 transition-colors">
+                            <button onclick="event.stopPropagation(); deleteMemo('${memo.id}', ${isSync})" class="text-gray-400 hover:text-red-500 transition-colors">
                                 <i class="fa-solid fa-trash-can text-xs"></i>
                             </button>
                         </div>
@@ -695,45 +695,6 @@
                 container.insertAdjacentHTML('beforeend', cardHtml);
             });
         }
-
-    allMemos.forEach(memo => {
-        const card = document.createElement('div');
-        const borderClass = memo.isSync ? 'border-amber-400 bg-amber-50/20' : 'border-gray-200 bg-gray-50/40';
-        
-        // 預設加上 transition 讓動態變溫和
-        card.className = 'p-3 rounded-lg border ' + borderClass + ' card-shadow mb-2 block relative transition-all duration-200';
-        
-        card.innerHTML = `
-            <div class="flex justify-between items-start gap-2 w-full">
-                <span class="font-bold text-[10px] text-gray-400 shrink-0 mt-0.5 select-none">${memo.isSync ? '🌐' : '🔒'}</span>
-                
-                <!-- 核心優化：平時強制限制在兩行的高度，超出就隱藏；點擊後拿掉限制 -->
-                <div class="text-gray-700 font-medium flex-1 leading-relaxed break-all whitespace-pre-line text-xs memo-text line-clamp-2">
-                    ${linkify(memo.content)}
-                </div>
-                
-                <button class="del-btn text-gray-300 hover:text-red-500 transition-colors px-1 shrink-0"><i class="fa-solid fa-trash-can text-[10px]"></i></button>
-            </div>
-        `;
-
-        // 點擊卡片的邏輯：按到垃圾桶或連結就不動作，按到其他地方就在「縮短」與「展開」之間切換
-        card.onclick = (e) => {
-            if (e.target.closest('.del-btn') || e.target.tagName === 'A') return;
-            
-            const textElement = card.querySelector('.memo-text');
-            if (textElement.classList.contains('line-clamp-2')) {
-                // 展開：移除兩行限制
-                textElement.classList.remove('line-clamp-2');
-            } else {
-                // 摺疊：加回兩行限制
-                textElement.classList.add('line-clamp-2');
-            }
-        };
-        
-        card.querySelector('.del-btn').onclick = () => deleteMemo(memo.id, memo.isSync);
-        container.appendChild(card);
-    });
-}
 
         function saveMemoData() {
             const content = document.getElementById('form-memo-content').value.trim();
