@@ -662,7 +662,6 @@
     const allMemos = [...cloudMemos.map(m => ({ ...m, isSync: true })), ...localMemos.map(m => ({ ...m, isSync: false }))];
     if (allMemos.length === 0) { container.innerHTML = '<p class="text-gray-400 text-center py-6">目前沒有備忘紀錄</p>'; return; }
     
-    // 安全版網址偵測：直接用簡單的字串分割，百分之百不破壞 HTML 結構
     const linkify = (text) => {
         return text.split(/(\s+)/).map(part => {
             if (part.startsWith('http://') || part.startsWith('https://')) {
@@ -675,22 +674,37 @@
     allMemos.forEach(memo => {
         const card = document.createElement('div');
         const borderClass = memo.isSync ? 'border-amber-400 bg-amber-50/20' : 'border-gray-200 bg-gray-50/40';
-        card.className = 'p-3 rounded-lg border ' + borderClass + ' card-shadow mb-2 block relative';
+        
+        // 預設加上 transition 讓動態變溫和
+        card.className = 'p-3 rounded-lg border ' + borderClass + ' card-shadow mb-2 block relative transition-all duration-200';
         
         card.innerHTML = `
             <div class="flex justify-between items-start gap-2 w-full">
                 <span class="font-bold text-[10px] text-gray-400 shrink-0 mt-0.5 select-none">${memo.isSync ? '🌐' : '🔒'}</span>
-                <div class="text-gray-700 font-medium flex-1 leading-relaxed break-all whitespace-pre-line text-xs">
+                
+                <!-- 核心優化：平時強制限制在兩行的高度，超出就隱藏；點擊後拿掉限制 -->
+                <div class="text-gray-700 font-medium flex-1 leading-relaxed break-all whitespace-pre-line text-xs memo-text line-clamp-2">
                     ${linkify(memo.content)}
                 </div>
+                
                 <button class="del-btn text-gray-300 hover:text-red-500 transition-colors px-1 shrink-0"><i class="fa-solid fa-trash-can text-[10px]"></i></button>
             </div>
         `;
 
+        // 點擊卡片的邏輯：按到垃圾桶或連結就不動作，按到其他地方就在「縮短」與「展開」之間切換
         card.onclick = (e) => {
             if (e.target.closest('.del-btn') || e.target.tagName === 'A') return;
-            editMemo(memo.id, memo.isSync);
+            
+            const textElement = card.querySelector('.memo-text');
+            if (textElement.classList.contains('line-clamp-2')) {
+                // 展開：移除兩行限制
+                textElement.classList.remove('line-clamp-2');
+            } else {
+                // 摺疊：加回兩行限制
+                textElement.classList.add('line-clamp-2');
+            }
         };
+        
         card.querySelector('.del-btn').onclick = () => deleteMemo(memo.id, memo.isSync);
         container.appendChild(card);
     });
