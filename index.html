@@ -655,25 +655,41 @@
         function closeMemoModal() { document.getElementById('memo-modal').classList.add('hidden'); }
 
         function renderMemos() {
-            const container = document.getElementById('memo-list-container');
-            if(!container) return; container.innerHTML = '';
-            const allMemos = [...cloudMemos.map(m => ({ ...m, isSync: true })), ...localMemos.map(m => ({ ...m, isSync: false }))];
-            if (allMemos.length === 0) { container.innerHTML = '<p class="text-gray-400 text-center py-6">目前沒有備忘紀錄</p>'; return; }
-            allMemos.forEach(memo => {
-                const card = document.createElement('div');
-                const borderClass = memo.isSync ? 'border-amber-400 bg-amber-50/20' : 'border-gray-200 bg-gray-50/40';
-                card.className = `p-2 rounded-lg border ${borderClass} card-shadow relative group cursor-pointer hover:bg-gray-50 transition-colors`;
-                card.onclick = (e) => { if (e.target.closest('.del-btn')) return; editMemo(memo.id, memo.isSync); };
-                card.innerHTML = `
-                    <div class="flex justify-between items-start gap-1">
-                        <span class="font-bold text-[10px] text-gray-400 shrink-0 select-none">${memo.isSync ? '🌐' : '🔒'}</span>
-                        <p class="text-gray-700 font-medium flex-1 leading-relaxed break-all whitespace-pre-line">${memo.content}</p>
-                        <button class="del-btn text-gray-300 hover:text-red-500 transition-colors px-1 shrink-0"><i class="fa-solid fa-trash-can text-[10px]"></i></button>
-                    </div>`;
-                card.querySelector('.del-btn').onclick = () => deleteMemo(memo.id, memo.isSync);
-                container.appendChild(card);
-            });
-        }
+    const container = document.getElementById('memo-list-container');
+    if(!container) return; container.innerHTML = '';
+    const allMemos = [...cloudMemos.map(m => ({ ...m, isSync: true })), ...localMemos.map(m => ({ ...m, isSync: false }))];
+    if (allMemos.length === 0) { container.innerHTML = '<p class="text-gray-400 text-center py-6">目前沒有備忘紀錄</p>'; return; }
+    
+    // 網址偵測轉換器
+    const linkify = (text) => {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        return text.replace(urlRegex, (url) => {
+            return `<a href="${url}" target="_blank" class="text-blue-500 hover:underline break-all relative z-10">${url}</a>`;
+        });
+    };
+
+    allMemos.forEach(memo => {
+        const card = document.createElement('div');
+        const borderClass = memo.isSync ? 'border-amber-400 bg-amber-50/20' : 'border-gray-200 bg-gray-50/40';
+        card.className = `p-2 rounded-lg border ${borderClass} card-shadow relative group cursor-pointer hover:bg-gray-50 transition-colors`;
+        
+        // 讓點擊刪除或點擊超連結時，不會觸發卡片的編輯視窗
+        card.onclick = (e) => { 
+            if (e.target.closest('.del-btn') || e.target.tagName === 'A') return; 
+            editMemo(memo.id, memo.isSync); 
+        };
+        
+        card.innerHTML = `
+            <div class="flex justify-between items-start gap-1">
+                <span class="font-bold text-[10px] text-gray-400 shrink-0 select-none">${memo.isSync ? '🌐' : '🔒'}</span>
+                <p class="text-gray-700 font-medium flex-1 leading-relaxed break-all whitespace-pre-line">${linkify(memo.content)}</p>
+                <button class="del-btn text-gray-300 hover:text-red-500 transition-colors px-1 shrink-0"><i class="fa-solid fa-trash-can text-[10px]"></i></button>
+            </div>
+        `;
+        card.querySelector('.del-btn').onclick = () => deleteMemo(memo.id, memo.isSync);
+        container.appendChild(card);
+    });
+}
 
         function saveMemoData() {
             const content = document.getElementById('form-memo-content').value.trim();
