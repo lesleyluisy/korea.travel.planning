@@ -1010,9 +1010,6 @@ async function syncAllCloudData() {
         if(typeof renderMemos === 'function') renderMemos();
         if(typeof renderExpenses === 'function') renderExpenses();
         
-        // 【🔥 關鍵修正：補上檢查清單的畫面渲染指令】
-        if(typeof renderChecklist === 'function') renderChecklist();
-        
         if(icon) icon.classList.remove('syncing');
     }
 }
@@ -1048,6 +1045,7 @@ async function updateCloudData() {
 
         // 頁面初始化
         fetchLiveExchangeRate();
+        if(typeof renderChecklist === 'function') renderChecklist();
         syncAllCloudData();
         setInterval(syncAllCloudData, 30000); // 每30秒自動背地刷新
     </script>
