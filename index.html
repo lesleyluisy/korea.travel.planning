@@ -967,6 +967,11 @@ async function syncAllCloudData() {
     const chkData = localStorage.getItem('koreaTravelChecklist_v3');
     checklist = chkData ? JSON.parse(chkData) : JSON.parse(JSON.stringify(defaultChecklist));
     
+    // 防呆：如果本地第一次完全沒資料，直接幫它寫入預設值，避免刷新變空白
+    if (!chkData) {
+        localStorage.setItem('koreaTravelChecklist_v3', JSON.stringify(checklist));
+    }
+    
     try {
         const response = await fetch(BIN_URL, {
             method: 'GET',
@@ -1001,10 +1006,14 @@ async function syncAllCloudData() {
         if(typeof renderHotels === 'function') renderHotels();
         if(typeof renderMemos === 'function') renderMemos();
         if(typeof renderExpenses === 'function') renderExpenses();
+        
+        // 【🔥 關鍵修正：補上檢查清單的畫面渲染指令】
+        if(typeof renderChecklist === 'function') renderChecklist();
+        
         if(icon) icon.classList.remove('syncing');
     }
 }
-
+        
 async function updateCloudData() {
     const icon = document.getElementById('sync-icon');
     const status = document.getElementById('sync-status');
